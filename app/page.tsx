@@ -256,7 +256,7 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#94a3b8" tick={{fontSize: 12, fontWeight: 600}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
                                     
                                     {/* Áreas Independentes (SEM stackId) com transparência para comparação */}
