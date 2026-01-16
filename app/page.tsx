@@ -102,10 +102,10 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- CORREÇÃO: Invertendo Atendimentos e Agendamentos ---
-            atendimentos: metrics.agendamentos || 0, // O campo 'agendamentos' da API vira 'atendimentos' na tela
-            agendamentos: metrics.atendimentos || 0, // O campo 'atendimentos' da API vira 'agendamentos' na tela
-            // -------------------------------------------------------
+            // --- DATA INVERSION (Mantido do passo anterior) ---
+            atendimentos: metrics.agendamentos || 0, 
+            agendamentos: metrics.atendimentos || 0, 
+            // -------------------------------------------------
 
             comparecimentos: metrics.comparecimentos || 0,
 
@@ -142,8 +142,8 @@ export default function Dashboard() {
         leads: acc.leads + curr.leads,
         cliques: acc.cliques + curr.cliques,
         vendas: acc.vendas + curr.vendas,
-        atendimentos: acc.atendimentos + curr.atendimentos,     // Já soma o valor corrigido/invertido
-        agendamentos: acc.agendamentos + curr.agendamentos,     // Já soma o valor corrigido/invertido
+        atendimentos: acc.atendimentos + curr.atendimentos,
+        agendamentos: acc.agendamentos + curr.agendamentos,
         comparecimentos: acc.comparecimentos + curr.comparecimentos
     }), { invest: 0, faturamento: 0, leads: 0, cliques: 0, vendas: 0, atendimentos: 0, agendamentos: 0, comparecimentos: 0 });
 
@@ -153,17 +153,18 @@ export default function Dashboard() {
     const ticket = sum.vendas > 0 ? sum.faturamento / sum.vendas : 0;
     const cpa = sum.vendas > 0 ? sum.invest / sum.vendas : 0;
 
+    // --- AQUI ESTÁ A MUDANÇA DE ORDEM ---
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, 
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, 
+        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, // Agendamentos agora vem antes (acima)
+        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, // Atendimentos agora vem depois (abaixo)
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // Recalculando taxas baseadas nos valores corrigidos
+        // Recalculando taxas
         tx_agend: d.atendimentos > 0 ? Number(((d.agendamentos / d.atendimentos) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
