@@ -315,6 +315,7 @@ export default function Dashboard() {
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
                       <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div>
                   </div>
+                </div> {/* <--- O erro estava aqui, eu tinha esquecido de fechar esse DIV */}
             </>
         )}
       </main>
