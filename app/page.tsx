@@ -234,7 +234,11 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                                     <XAxis type="number" stroke="#94a3b8" tickFormatter={(val) => `R$${val/1000}k`} tick={{fontSize: 11}} />
                                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 12, fontWeight: 700, fill: '#475569'}} axisLine={false} tickLine={false} />
-                                    formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']}
+                                    <Tooltip 
+                                        cursor={{fill: '#f8fafc'}} 
+                                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
+                                        formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
+                                    />
                                     <Bar dataKey={mainChartMetric} radius={[0, 6, 6, 0]} barSize={40}>
                                         {processedData.singleMonthData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
