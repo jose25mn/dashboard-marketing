@@ -73,7 +73,7 @@ export default function Dashboard() {
   const processedData = useMemo(() => {
     if (!data) return { 
         chartData: [], 
-        singleMonthData: [], // Dados formatados especificamente para barras (1 mês)
+        singleMonthData: [], 
         totals: { invest: 0, faturamento: 0, leads: 0, roas: 0, cpl: 0, cliques: 0, cpc: 0, vendas: 0, ticket: 0, cpa: 0 }, 
         funnelData: [],
         conversionData: [],
@@ -91,21 +91,30 @@ export default function Dashboard() {
     // 2. Mapeamento Geral (Para KPIs e Gráficos de Linha)
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
+        
         return { 
             name: item.name, 
             ...metrics,
-            // Proteções contra null/undefined
+            // Proteções contra null e INVERSÃO DE CAMPOS AQUI
             invest: metrics.invest || 0,
             faturamento: metrics.faturamento || 0,
             leads: metrics.leads || 0,
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
+            
+            // --- CORREÇÃO: Invertendo Atendimentos e Agendamentos ---
+            atendimentos: metrics.agendamentos || 0, // O campo 'agendamentos' vira 'atendimentos'
+            agendamentos: metrics.atendimentos || 0, // O campo 'atendimentos' vira 'agendamentos'
+            // -------------------------------------------------------
+
+            comparecimentos: metrics.comparecimentos || 0,
+
             cpl: metrics.cpl || 0,
             cpc: metrics.cpc || 0,
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
             
-            // Dados específicos para o gráfico principal (Sempre presentes para comparação)
+            // Dados específicos para o gráfico principal
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -119,7 +128,6 @@ export default function Dashboard() {
     let singleMonthData: any[] = [];
     if (isSingleMonth && slice.length > 0) {
         const item = slice[0];
-        // Transforma o objeto do mês em um array de 3 objetos (um para cada plataforma)
         singleMonthData = [
             { name: 'Google Ads', faturamento: item.google?.faturamento || 0, invest: item.google?.invest || 0, fill: '#3b82f6' },
             { name: 'Facebook', faturamento: item.facebook?.faturamento || 0, invest: item.facebook?.invest || 0, fill: '#6366f1' },
@@ -134,9 +142,9 @@ export default function Dashboard() {
         leads: acc.leads + curr.leads,
         cliques: acc.cliques + curr.cliques,
         vendas: acc.vendas + curr.vendas,
-        atendimentos: acc.atendimentos + (curr.atendimentos || 0),
-        agendamentos: acc.agendamentos + (curr.agendamentos || 0),
-        comparecimentos: acc.comparecimentos + (curr.comparecimentos || 0)
+        atendimentos: acc.atendimentos + curr.atendimentos,     // Já somará o valor corrigido acima
+        agendamentos: acc.agendamentos + curr.agendamentos,     // Já somará o valor corrigido acima
+        comparecimentos: acc.comparecimentos + curr.comparecimentos
     }), { invest: 0, faturamento: 0, leads: 0, cliques: 0, vendas: 0, atendimentos: 0, agendamentos: 0, comparecimentos: 0 });
 
     const roas = sum.invest > 0 ? sum.faturamento / sum.invest : 0;
@@ -155,9 +163,10 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        tx_agend: d.taxa_agendamento || 0,
-        tx_comp: d.taxa_comparecimento || 0,
-        tx_venda: d.taxa_venda || 0
+        // Recalculando taxas baseadas nos valores corrigidos
+        tx_agend: d.atendimentos > 0 ? Number(((d.agendamentos / d.atendimentos) * 100).toFixed(1)) : 0,
+        tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
+        tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
 
     return { chartData, singleMonthData, isSingleMonth, totals: { ...sum, roas, cpl, cpc, ticket, cpa }, funnelData, conversionData };
@@ -315,7 +324,6 @@ export default function Dashboard() {
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
                       <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div>
                   </div>
-                </div> {/* <--- O erro estava aqui, eu tinha esquecido de fechar esse DIV */}
             </>
         )}
       </main>
