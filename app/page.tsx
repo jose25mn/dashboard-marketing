@@ -102,7 +102,7 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- DATA INVERSION (Mantido do passo anterior) ---
+            // --- DATA INVERSION (Mantida) ---
             atendimentos: metrics.agendamentos || 0, 
             agendamentos: metrics.atendimentos || 0, 
             // -------------------------------------------------
@@ -153,11 +153,11 @@ export default function Dashboard() {
     const ticket = sum.vendas > 0 ? sum.faturamento / sum.vendas : 0;
     const cpa = sum.vendas > 0 ? sum.invest / sum.vendas : 0;
 
-    // --- AQUI ESTÁ A MUDANÇA DE ORDEM ---
+    // --- FUNNEL ORDER (Mantida: Agendamentos acima de Atendimentos) ---
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, // Agendamentos agora vem antes (acima)
-        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, // Atendimentos agora vem depois (abaixo)
+        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, 
+        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, 
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
@@ -323,7 +323,20 @@ export default function Dashboard() {
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
-                      <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div>
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={processedData.conversionData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
+                                <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} />
+                                <Legend wrapperStyle={{fontSize: '10px'}} />
+                                <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
+                                {/* LINHA DE VENDA REMOVIDA DAQUI */}
+                            </LineChart>
+                        </ResponsiveContainer>
+                      </div>
                   </div>
                 </div>
             </>
