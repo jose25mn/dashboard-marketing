@@ -95,7 +95,7 @@ export default function Dashboard() {
         return { 
             name: item.name, 
             ...metrics,
-            // Proteções contra null e INVERSÃO DE CAMPOS AQUI
+            // Proteções contra null
             invest: metrics.invest || 0,
             faturamento: metrics.faturamento || 0,
             leads: metrics.leads || 0,
@@ -103,8 +103,8 @@ export default function Dashboard() {
             vendas: metrics.vendas || 0,
             
             // --- CORREÇÃO: Invertendo Atendimentos e Agendamentos ---
-            atendimentos: metrics.agendamentos || 0, // O campo 'agendamentos' vira 'atendimentos'
-            agendamentos: metrics.atendimentos || 0, // O campo 'atendimentos' vira 'agendamentos'
+            atendimentos: metrics.agendamentos || 0, // O campo 'agendamentos' da API vira 'atendimentos' na tela
+            agendamentos: metrics.atendimentos || 0, // O campo 'atendimentos' da API vira 'agendamentos' na tela
             // -------------------------------------------------------
 
             comparecimentos: metrics.comparecimentos || 0,
@@ -142,8 +142,8 @@ export default function Dashboard() {
         leads: acc.leads + curr.leads,
         cliques: acc.cliques + curr.cliques,
         vendas: acc.vendas + curr.vendas,
-        atendimentos: acc.atendimentos + curr.atendimentos,     // Já somará o valor corrigido acima
-        agendamentos: acc.agendamentos + curr.agendamentos,     // Já somará o valor corrigido acima
+        atendimentos: acc.atendimentos + curr.atendimentos,     // Já soma o valor corrigido/invertido
+        agendamentos: acc.agendamentos + curr.agendamentos,     // Já soma o valor corrigido/invertido
         comparecimentos: acc.comparecimentos + curr.comparecimentos
     }), { invest: 0, faturamento: 0, leads: 0, cliques: 0, vendas: 0, atendimentos: 0, agendamentos: 0, comparecimentos: 0 });
 
@@ -324,6 +324,7 @@ export default function Dashboard() {
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
                       <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div>
                   </div>
+                </div>
             </>
         )}
       </main>
