@@ -207,7 +207,7 @@ export default function Dashboard() {
              {/* Filtro Plataforma */}
              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                 {['total', 'google', 'facebook', 'instagram'].map(p => (
-                    <button key={p} onClick={() => setPlatformFilter(p as any)} className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${platformFilter === p ? 'bg-[#2d5d68] text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>{p}</button>
+                    <button key={p} onClick={() => setPlatformFilter(p as any)} className={`px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all ${platformFilter === p ? 'bg-[#2d5d68] text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>{p}</button>
                 ))}
              </div>
              
@@ -268,8 +268,7 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12, fontWeight: 700}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} // Mude DE (value: number) PARA (value: any)
-formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Bar dataKey={mainChartMetric} radius={[6, 6, 0, 0]} barSize={60}>
                                         {processedData.platformComparisonData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -287,8 +286,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#94a3b8" tick={{fontSize: 12, fontWeight: 600}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} // Como deve ficar:
-formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
                                     <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.5} />
                                     <Area type="monotone" name="Facebook" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={3} fillOpacity={0.5} />
@@ -374,7 +372,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: number) => [`R$ ${val.toFixed(2)}`, 'CPL']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: any) => [`R$ ${Number(val).toFixed(2)}`, 'CPL']} />
                                     <Bar dataKey="cpl" name="CPL" radius={[4,4,0,0]} barSize={40}>
                                         {processedData.platformComparisonData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -388,7 +386,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: number) => [`R$ ${val.toFixed(2)}`, 'CPL']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: any) => [`R$ ${Number(val).toFixed(2)}`, 'CPL']} />
                                     <Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" />
                                 </AreaChart>
                             )}
@@ -412,7 +410,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: number) => [`${val}%`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val: any) => [`${Number(val)}%`, '']} />
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     <Bar dataKey="tx_agend" name="Agendamento" fill="#f59e0b" radius={[4,4,0,0]} />
                                     <Bar dataKey="tx_venda" name="Venda" fill="#10b981" radius={[4,4,0,0]} />
