@@ -328,7 +328,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Legend wrapperStyle={{fontSize: '11px'}} />
                                     <Bar dataKey="invest" name="Investimento" fill="#94a3b8" radius={[4,4,4,4]} barSize={20} />
                                     <Bar dataKey="faturamento" name="Faturamento" fill="#10b981" radius={[4,4,4,4]} barSize={20} />
@@ -340,7 +340,7 @@ formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis yAxisId="left" stroke="#10b981" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']}/>
                                     <Bar yAxisId="left" dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
                                     <Line yAxisId="right" type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
                                 </ComposedChart>
