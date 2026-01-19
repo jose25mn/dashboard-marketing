@@ -155,7 +155,7 @@ export default function Dashboard() {
         leads: acc.leads + curr.leads,
         vendas: acc.vendas + curr.vendas,
         atendimentos: acc.atendimentos + (curr.atendimentos || 0),
-        agendamentos: acc.agendamentos + (curr.agendimentos || 0),
+        agendamentos: acc.agendamentos + (curr.agendamentos || 0),
         comparecimentos: acc.comparecimentos + (curr.comparecimentos || 0)
     }), { invest: 0, faturamento: 0, leads: 0, vendas: 0, atendimentos: 0, agendamentos: 0, comparecimentos: 0 });
 
