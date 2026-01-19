@@ -102,9 +102,11 @@ export default function Dashboard() {
             cpl: metrics.cpl || 0,
             vendas: metrics.vendas || 0,
             
-            // --- CORREÇÃO: TROCA DE VALORES (Atendimentos <-> Agendamentos) ---
-            atendimentos: metrics.agendamentos || 0, // Recebe valor de agendamentos
-            agendamentos: metrics.atendimentos || 0, // Recebe valor de atendimentos
+            // --- CORREÇÃO: INVERSÃO DE VALORES ---
+            // A API parece estar enviando os valores trocados.
+            // Aqui garantimos que a variável 'atendimentos' receba o valor maior (que vem como agendamentos)
+            atendimentos: metrics.agendamentos || 0, 
+            agendamentos: metrics.atendimentos || 0, 
             
             // Dados específicos para o gráfico de Área (Comparativo visual acumulado)
             google_fat: item.google?.faturamento || 0,
