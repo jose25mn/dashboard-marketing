@@ -102,6 +102,10 @@ export default function Dashboard() {
             cpl: metrics.cpl || 0,
             vendas: metrics.vendas || 0,
             
+            // --- CORREÇÃO: TROCA DE VALORES (Atendimentos <-> Agendamentos) ---
+            atendimentos: metrics.agendamentos || 0, // Recebe valor de agendamentos
+            agendamentos: metrics.atendimentos || 0, // Recebe valor de atendimentos
+            
             // Dados específicos para o gráfico de Área (Comparativo visual acumulado)
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
