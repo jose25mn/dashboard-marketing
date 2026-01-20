@@ -71,7 +71,7 @@ export default function Dashboard() {
 
   // --- PROCESSAMENTO ---
   const processedData = useMemo(() => {
-    // CORREÇÃO: Adicionado singleMonthConversion: [] para evitar o erro de build
+    // Inicialização segura para evitar erro de build
     if (!data) return { 
         chartData: [], 
         singleMonthData: [], 
@@ -84,13 +84,15 @@ export default function Dashboard() {
 
     const isSingleMonth = monthFilter !== 'all';
 
-    // 1. Filtragem
+    // 1. Filtragem de Período/Mês
     let slice = data;
     if (period === 'sem1') slice = data.slice(0, 6);
     if (period === 'sem2') slice = data.slice(6, 12);
     if (isSingleMonth) slice = data.filter(d => d.name === monthFilter);
 
-    // 2. Mapeamento Geral
+    // 2. Mapeamento Geral (ChartData)
+    // Aqui nós preparamos os dados. Se houver filtro de plataforma, as métricas "raiz" (invest, faturamento)
+    // já assumem os valores daquela plataforma.
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
         return { 
@@ -108,7 +110,8 @@ export default function Dashboard() {
             cpc: metrics.cpc || 0,
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
-            // Gráfico principal
+            
+            // Dados específicos para o modo "Total" (Stack)
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -122,12 +125,13 @@ export default function Dashboard() {
     let singleMonthData: any[] = [];
     if (isSingleMonth && slice.length > 0) {
         const item = slice[0];
-        const processPlatform = (name: string, pData: any, color: string) => {
+        const processPlatform = (name: string, pData: any, color: string, id: string) => {
              const inv = pData?.invest || 0;
              const fat = pData?.faturamento || 0;
              const leads = pData?.leads || 0;
              return {
                 name,
+                id,
                 invest: inv,
                 faturamento: fat,
                 cpl: leads > 0 ? inv / leads : 0,
@@ -135,11 +139,18 @@ export default function Dashboard() {
              };
         };
 
-        singleMonthData = [
-            processPlatform('Google', item.google, '#3b82f6'),
-            processPlatform('Facebook', item.facebook, '#6366f1'),
-            processPlatform('Instagram', item.instagram, '#ec4899'),
+        const allPlatforms = [
+            processPlatform('Google Ads', item.google, '#3b82f6', 'google'),
+            processPlatform('Facebook', item.facebook, '#6366f1', 'facebook'),
+            processPlatform('Instagram', item.instagram, '#ec4899', 'instagram'),
         ];
+
+        // Se houver filtro de plataforma, mostramos apenas a plataforma selecionada no gráfico de barras
+        if (platformFilter !== 'total') {
+            singleMonthData = allPlatforms.filter(p => p.id === platformFilter);
+        } else {
+            singleMonthData = allPlatforms;
+        }
     }
 
     // 4. Somatório de Totais
@@ -251,7 +262,7 @@ export default function Dashboard() {
                     <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // MODO BARRAS (Mês Único)
+                                // --- MODO BARRAS (MÊS ÚNICO) ---
                                 <BarChart data={processedData.singleMonthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12, fontWeight: 700}} axisLine={false} tickLine={false} />
@@ -261,14 +272,15 @@ export default function Dashboard() {
                                         contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
                                         formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     />
-                                    <Bar dataKey={mainChartMetric} radius={[8, 8, 0, 0]} barSize={80}>
+                                    {/* Se for total, usa as cores individuais. Se for filtro, usa a cor definida no objeto */}
+                                    <Bar dataKey={mainChartMetric} radius={[8, 8, 0, 0]} barSize={platformFilter === 'total' ? 80 : 120}>
                                         {processedData.singleMonthData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
                                         ))}
                                     </Bar>
                                 </BarChart>
                             ) : (
-                                // MODO ÁREA (Evolução)
+                                // --- MODO ÁREA (EVOLUÇÃO) ---
                                 <AreaChart data={processedData.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="gradGoogle" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
@@ -280,9 +292,26 @@ export default function Dashboard() {
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
-                                    <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.5} />
-                                    <Area type="monotone" name="Facebook" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={3} fillOpacity={0.5} />
-                                    <Area type="monotone" name="Instagram" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={3} fillOpacity={0.5} />
+
+                                    {/* LÓGICA DE EXIBIÇÃO: TOTAL vs PLATAFORMA ÚNICA */}
+                                    {platformFilter === 'total' ? (
+                                        <>
+                                            <Area type="monotone" name="Google Ads" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={2} fillOpacity={1} />
+                                            <Area type="monotone" name="Facebook" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={2} fillOpacity={1} />
+                                            <Area type="monotone" name="Instagram" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={2} fillOpacity={1} />
+                                        </>
+                                    ) : (
+                                        // Se escolheu uma plataforma, mostra o dado GERAL (que já foi filtrado no useMemo)
+                                        <Area 
+                                            type="monotone" 
+                                            name={platformFilter === 'google' ? 'Google Ads' : platformFilter === 'facebook' ? 'Facebook' : 'Instagram'} 
+                                            dataKey={mainChartMetric} // Usa a métrica genérica (invest/faturamento) que já contém o valor filtrado
+                                            stroke={platformFilter === 'google' ? '#3b82f6' : platformFilter === 'facebook' ? '#6366f1' : '#ec4899'} 
+                                            fill={`url(#grad${platformFilter === 'google' ? 'Google' : platformFilter === 'facebook' ? 'Face' : 'Insta'})`} 
+                                            strokeWidth={3} 
+                                            fillOpacity={1} 
+                                        />
+                                    )}
                                 </AreaChart>
                             )}
                         </ResponsiveContainer>
