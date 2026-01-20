@@ -71,9 +71,11 @@ export default function Dashboard() {
 
   // --- PROCESSAMENTO ---
   const processedData = useMemo(() => {
+    // CORREÇÃO: Adicionado singleMonthConversion: [] para evitar o erro de build
     if (!data) return { 
         chartData: [], 
         singleMonthData: [], 
+        singleMonthConversion: [], 
         totals: { invest: 0, faturamento: 0, leads: 0, roas: 0, cpl: 0, cliques: 0, cpc: 0, vendas: 0, ticket: 0, cpa: 0 }, 
         funnelData: [],
         conversionData: [],
@@ -124,13 +126,11 @@ export default function Dashboard() {
              const inv = pData?.invest || 0;
              const fat = pData?.faturamento || 0;
              const leads = pData?.leads || 0;
-             // Taxas e CPL específicos por plataforma
              return {
                 name,
                 invest: inv,
                 faturamento: fat,
                 cpl: leads > 0 ? inv / leads : 0,
-                // Simulando taxas simplificadas por plataforma se existirem
                 fill: color
              };
         };
@@ -251,8 +251,7 @@ export default function Dashboard() {
                     <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // MODO BARRAS (Mês Único - VERTICAL PADRÃO)
-                                // Alterado de layout="vertical" para padrão para preencher melhor
+                                // MODO BARRAS (Mês Único)
                                 <BarChart data={processedData.singleMonthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12, fontWeight: 700}} axisLine={false} tickLine={false} />
