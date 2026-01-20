@@ -88,34 +88,25 @@ export default function Dashboard() {
     if (period === 'sem2') slice = data.slice(6, 12);
     if (isSingleMonth) slice = data.filter(d => d.name === monthFilter);
 
-    // 2. Mapeamento Geral (Para KPIs e Gráficos de Linha)
+    // 2. Mapeamento Geral
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
-
         return { 
             name: item.name, 
             ...metrics,
-            // Proteções contra null
             invest: metrics.invest || 0,
             faturamento: metrics.faturamento || 0,
             leads: metrics.leads || 0,
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
-
-            // --- DATA INVERSION (Mantido do passo anterior) ---
-            // --- DATA INVERSION (Mantida) ---
             atendimentos: metrics.agendamentos || 0, 
             agendamentos: metrics.atendimentos || 0, 
-            // -------------------------------------------------
-
             comparecimentos: metrics.comparecimentos || 0,
-
             cpl: metrics.cpl || 0,
             cpc: metrics.cpc || 0,
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
-
-            // Dados específicos para o gráfico principal
+            // Gráfico principal
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -129,10 +120,25 @@ export default function Dashboard() {
     let singleMonthData: any[] = [];
     if (isSingleMonth && slice.length > 0) {
         const item = slice[0];
+        const processPlatform = (name: string, pData: any, color: string) => {
+             const inv = pData?.invest || 0;
+             const fat = pData?.faturamento || 0;
+             const leads = pData?.leads || 0;
+             // Taxas e CPL específicos por plataforma
+             return {
+                name,
+                invest: inv,
+                faturamento: fat,
+                cpl: leads > 0 ? inv / leads : 0,
+                // Simulando taxas simplificadas por plataforma se existirem
+                fill: color
+             };
+        };
+
         singleMonthData = [
-            { name: 'Google Ads', faturamento: item.google?.faturamento || 0, invest: item.google?.invest || 0, fill: '#3b82f6' },
-            { name: 'Facebook', faturamento: item.facebook?.faturamento || 0, invest: item.facebook?.invest || 0, fill: '#6366f1' },
-            { name: 'Instagram', faturamento: item.instagram?.faturamento || 0, invest: item.instagram?.invest || 0, fill: '#ec4899' },
+            processPlatform('Google', item.google, '#3b82f6'),
+            processPlatform('Facebook', item.facebook, '#6366f1'),
+            processPlatform('Instagram', item.instagram, '#ec4899'),
         ];
     }
 
@@ -154,27 +160,29 @@ export default function Dashboard() {
     const ticket = sum.vendas > 0 ? sum.faturamento / sum.vendas : 0;
     const cpa = sum.vendas > 0 ? sum.invest / sum.vendas : 0;
 
-    // --- AQUI ESTÁ A MUDANÇA DE ORDEM ---
-    // --- FUNNEL ORDER (Mantida: Agendamentos acima de Atendimentos) ---
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, // Agendamentos agora vem antes (acima)
-        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, // Atendimentos agora vem depois (abaixo)
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' }, 
-        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' }, 
+        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' },
+        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' },
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // Recalculando taxas
         tx_agend: d.atendimentos > 0 ? Number(((d.agendamentos / d.atendimentos) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
 
-    return { chartData, singleMonthData, isSingleMonth, totals: { ...sum, roas, cpl, cpc, ticket, cpa }, funnelData, conversionData };
+    // Dados de conversão para visualização de mês único (Barras)
+    const singleMonthConversion = [
+        { name: 'Agendamento', value: conversionData[0]?.tx_agend || 0, fill: '#f59e0b' },
+        { name: 'Comparecimento', value: conversionData[0]?.tx_comp || 0, fill: '#ec4899' },
+        { name: 'Venda', value: conversionData[0]?.tx_venda || 0, fill: '#10b981' },
+    ];
+
+    return { chartData, singleMonthData, singleMonthConversion, isSingleMonth, totals: { ...sum, roas, cpl, cpc, ticket, cpa }, funnelData, conversionData };
   }, [data, period, monthFilter, platformFilter]);
 
   if (loading) return <div className="fixed inset-0 bg-[#e4f0f0] flex items-center justify-center z-50"><Activity className="animate-spin text-[#2d5d68]" size={32}/></div>;
@@ -243,24 +251,25 @@ export default function Dashboard() {
                     <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // MODO BARRAS (Mês Único)
-                                <BarChart data={processedData.singleMonthData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                                    <XAxis type="number" stroke="#94a3b8" tickFormatter={(val) => `R$${val/1000}k`} tick={{fontSize: 11}} />
-                                    <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 12, fontWeight: 700, fill: '#475569'}} axisLine={false} tickLine={false} />
+                                // MODO BARRAS (Mês Único - VERTICAL PADRÃO)
+                                // Alterado de layout="vertical" para padrão para preencher melhor
+                                <BarChart data={processedData.singleMonthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <YAxis stroke="#94a3b8" tickFormatter={(val) => `R$${val/1000}k`} tick={{fontSize: 11}} axisLine={false} tickLine={false} />
                                     <Tooltip 
                                         cursor={{fill: '#f8fafc'}} 
                                         contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
                                         formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
                                     />
-                                    <Bar dataKey={mainChartMetric} radius={[0, 6, 6, 0]} barSize={40}>
+                                    <Bar dataKey={mainChartMetric} radius={[8, 8, 0, 0]} barSize={80}>
                                         {processedData.singleMonthData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
                                         ))}
                                     </Bar>
                                 </BarChart>
                             ) : (
-                                // MODO ÁREA (Evolução) - SEM STACKID PARA COMPARAR
+                                // MODO ÁREA (Evolução)
                                 <AreaChart data={processedData.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="gradGoogle" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
@@ -272,8 +281,6 @@ export default function Dashboard() {
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
-
-                                    {/* Áreas Independentes (SEM stackId) com transparência para comparação */}
                                     <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.5} />
                                     <Area type="monotone" name="Facebook" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={3} fillOpacity={0.5} />
                                     <Area type="monotone" name="Instagram" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={3} fillOpacity={0.5} />
@@ -299,18 +306,29 @@ export default function Dashboard() {
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-orange-500 rounded-full"></div> Desempenho Financeiro (Geral)</h3></div>
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={processedData.chartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                <YAxis yAxisId="left" stroke="#10b981" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                <Tooltip 
-                                    contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
-                                    formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
-                                />
-                                <Bar yAxisId="left" dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
-                                <Line yAxisId="right" type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
-                            </ComposedChart>
+                            {processedData.isSingleMonth ? (
+                                // MODO BARRAS SIMPLES PARA MÊS ÚNICO
+                                <BarChart data={[processedData.totals]} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                     <XAxis tick={false} axisLine={false} />
+                                     <YAxis stroke="#94a3b8" tickFormatter={(val) => `R$${val/1000}k`} tick={{fontSize: 11}} axisLine={false} tickLine={false} />
+                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                     <Bar dataKey="invest" name="Investimento" fill="#3b82f6" radius={[4,4,0,0]} barSize={80} />
+                                     <Bar dataKey="faturamento" name="Faturamento" fill="#10b981" radius={[4,4,0,0]} barSize={80} />
+                                     <Legend />
+                                </BarChart>
+                            ) : (
+                                // MODO COMPOSTO PARA EVOLUÇÃO
+                                <ComposedChart data={processedData.chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                    <YAxis yAxisId="left" stroke="#10b981" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
+                                    <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                    <Bar yAxisId="left" dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
+                                    <Line yAxisId="right" type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
+                                </ComposedChart>
+                            )}
                         </ResponsiveContainer>
                       </div>
                   </div>
@@ -323,23 +341,49 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Eficiência de Lead (CPL)</h3></div>
-                      <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={processedData.chartData}><defs><linearGradient id="colorCpl" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" /></AreaChart></ResponsiveContainer></div>
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            {processedData.isSingleMonth ? (
+                                // MODO BARRAS (COMPARATIVO PLATAFORMA)
+                                <BarChart data={processedData.singleMonthData} layout="vertical" margin={{left: 20}}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                    <XAxis type="number" hide />
+                                    <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`R$ ${val.toFixed(2)}`, 'CPL']} />
+                                    <Bar dataKey="cpl" radius={[0, 4, 4, 0]} barSize={30}>
+                                        {processedData.singleMonthData.map((entry: any, index: number) => (
+                                            <Cell key={`cell-cpl-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            ) : (
+                                // MODO ÁREA (EVOLUÇÃO)
+                                <AreaChart data={processedData.chartData}><defs><linearGradient id="colorCpl" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" /></AreaChart>
+                            )}
+                        </ResponsiveContainer>
+                      </div>
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
-                      <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div>
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={processedData.conversionData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
-                                <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} />
-                                <Legend wrapperStyle={{fontSize: '10px'}} />
-                                <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                                <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
-                                {/* LINHA DE VENDA REMOVIDA DAQUI */}
-                            </LineChart>
+                             {processedData.isSingleMonth ? (
+                                // MODO BARRAS (COMPARATIVO ETAPAS)
+                                <BarChart data={processedData.singleMonthConversion} layout="vertical" margin={{left: 20}}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                    <XAxis type="number" domain={[0, 100]} hide />
+                                    <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`${val}%`, 'Taxa']} />
+                                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={30}>
+                                        {processedData.singleMonthConversion.map((entry: any, index: number) => (
+                                            <Cell key={`cell-conv-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                             ) : (
+                                // MODO LINHA (EVOLUÇÃO)
+                                <LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart>
+                             )}
                         </ResponsiveContainer>
                       </div>
                   </div>
