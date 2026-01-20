@@ -177,8 +177,8 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // Mantivemos o toFixed(1) para precisão, como estava antes
-        tx_agend: d.atendimentos > 0 ? Number(((d.agendamentos / d.atendimentos) * 100).toFixed(1)) : 0,
+        // MUDANÇA AQUI: Taxa de Agendamento calculada sobre LEADS (Agendamentos / Leads)
+        tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
@@ -390,7 +390,7 @@ export default function Dashboard() {
                                     <XAxis type="number" domain={[0, 100]} hide />
                                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
                                     
-                                    {/* MUDANÇA: Adicionado o "%" no formatter */}
+                                    {/* Adicionado o "%" no formatter */}
                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`${val}%`, 'Taxa']} />
                                     
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={30}>
@@ -405,7 +405,7 @@ export default function Dashboard() {
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
                                     
-                                    {/* MUDANÇA: Adicionado o "%" no formatter */}
+                                    {/* Adicionado o "%" no formatter */}
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(value: any, name: any) => [`${value}%`, name]} />
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
