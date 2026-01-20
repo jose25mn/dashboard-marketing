@@ -177,6 +177,7 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
+        // Mantivemos o toFixed(1) para precisão, como estava antes
         tx_agend: d.atendimentos > 0 ? Number(((d.agendamentos / d.atendimentos) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
@@ -288,7 +289,6 @@ export default function Dashboard() {
                                     />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
 
-                                    {/* MUDANÇA 1: REMOVIDO STACKID */}
                                     {platformFilter === 'total' ? (
                                         <>
                                             <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.4} />
@@ -342,7 +342,6 @@ export default function Dashboard() {
                                 <ComposedChart data={processedData.chartData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                    {/* MUDANÇA 2: EIXO ÚNICO PARA NÃO ENGANAR VISUALMENTE */}
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} />
                                     <Bar dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
@@ -390,7 +389,10 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                                     <XAxis type="number" domain={[0, 100]} hide />
                                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    
+                                    {/* MUDANÇA: Adicionado o "%" no formatter */}
                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`${val}%`, 'Taxa']} />
+                                    
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={30}>
                                         {processedData.singleMonthConversion.map((entry: any, index: number) => (
                                             <Cell key={`cell-conv-${index}`} fill={entry.fill} />
@@ -398,7 +400,19 @@ export default function Dashboard() {
                                     </Bar>
                                 </BarChart>
                              ) : (
-                                <LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart>
+                                <LineChart data={processedData.conversionData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                    <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
+                                    
+                                    {/* MUDANÇA: Adicionado o "%" no formatter */}
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(value: any, name: any) => [`${value}%`, name]} />
+                                    
+                                    <Legend wrapperStyle={{fontSize: '10px'}} />
+                                    <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} />
+                                </LineChart>
                              )}
                         </ResponsiveContainer>
                       </div>
