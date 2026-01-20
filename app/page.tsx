@@ -71,7 +71,6 @@ export default function Dashboard() {
 
   // --- PROCESSAMENTO ---
   const processedData = useMemo(() => {
-    // Inicialização segura
     if (!data) return { 
         chartData: [], 
         singleMonthData: [], 
@@ -84,13 +83,13 @@ export default function Dashboard() {
 
     const isSingleMonth = monthFilter !== 'all';
 
-    // 1. Filtragem de Período/Mês
+    // 1. Filtragem
     let slice = data;
     if (period === 'sem1') slice = data.slice(0, 6);
     if (period === 'sem2') slice = data.slice(6, 12);
     if (isSingleMonth) slice = data.filter(d => d.name === monthFilter);
 
-    // 2. Mapeamento Geral (ChartData)
+    // 2. Mapeamento
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
         return { 
@@ -109,7 +108,7 @@ export default function Dashboard() {
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
             
-            // Dados específicos para o modo "Total"
+            // Dados detalhados para o gráfico de área (Total)
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -119,7 +118,7 @@ export default function Dashboard() {
         };
     });
 
-    // 3. Dados Especiais para Gráfico de Barras
+    // 3. Dados Mês Único
     let singleMonthData: any[] = [];
     if (isSingleMonth && slice.length > 0) {
         const item = slice[0];
@@ -143,7 +142,6 @@ export default function Dashboard() {
             processPlatform('Instagram', item.instagram, '#ec4899', 'instagram'),
         ];
 
-        // Filtra se houver plataforma selecionada
         if (platformFilter !== 'total') {
             singleMonthData = allPlatforms.filter(p => p.id === platformFilter);
         } else {
@@ -151,7 +149,7 @@ export default function Dashboard() {
         }
     }
 
-    // 4. Somatório de Totais
+    // 4. Totais
     const sum = chartData.reduce((acc, curr) => ({
         invest: acc.invest + curr.invest,
         faturamento: acc.faturamento + curr.faturamento,
@@ -259,7 +257,6 @@ export default function Dashboard() {
                     <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // --- MODO BARRAS (MÊS ÚNICO) ---
                                 <BarChart data={processedData.singleMonthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 12, fontWeight: 700}} axisLine={false} tickLine={false} />
@@ -276,7 +273,6 @@ export default function Dashboard() {
                                     </Bar>
                                 </BarChart>
                             ) : (
-                                // --- MODO ÁREA (EVOLUÇÃO) ---
                                 <AreaChart data={processedData.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="gradGoogle" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
@@ -292,10 +288,9 @@ export default function Dashboard() {
                                     />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
 
-                                    {/* MUDANÇA: REMOVIDO stackId="1" PARA NÃO SOMAR OS VALORES */}
+                                    {/* MUDANÇA 1: REMOVIDO STACKID */}
                                     {platformFilter === 'total' ? (
                                         <>
-                                            {/* Opacidade reduzida para ver sobreposição */}
                                             <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.4} />
                                             <Area type="monotone" name="Facebook" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={3} fillOpacity={0.4} />
                                             <Area type="monotone" name="Instagram" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={3} fillOpacity={0.4} />
@@ -347,11 +342,11 @@ export default function Dashboard() {
                                 <ComposedChart data={processedData.chartData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                    <YAxis yAxisId="left" stroke="#10b981" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
+                                    {/* MUDANÇA 2: EIXO ÚNICO PARA NÃO ENGANAR VISUALMENTE */}
+                                    <YAxis stroke="#94a3b8" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} />
-                                    <Bar yAxisId="left" dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
-                                    <Line yAxisId="right" type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
+                                    <Bar dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
+                                    <Line type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
                                 </ComposedChart>
                             )}
                         </ResponsiveContainer>
