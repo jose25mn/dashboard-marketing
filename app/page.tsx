@@ -71,7 +71,7 @@ export default function Dashboard() {
 
   // --- PROCESSAMENTO ---
   const processedData = useMemo(() => {
-    // Inicialização segura para evitar erro de build
+    // Inicialização segura
     if (!data) return { 
         chartData: [], 
         singleMonthData: [], 
@@ -91,8 +91,6 @@ export default function Dashboard() {
     if (isSingleMonth) slice = data.filter(d => d.name === monthFilter);
 
     // 2. Mapeamento Geral (ChartData)
-    // Aqui nós preparamos os dados. Se houver filtro de plataforma, as métricas "raiz" (invest, faturamento)
-    // já assumem os valores daquela plataforma.
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
         return { 
@@ -111,7 +109,7 @@ export default function Dashboard() {
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
             
-            // Dados específicos para o modo "Total" (Stack)
+            // Dados específicos para o modo "Total"
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -121,7 +119,7 @@ export default function Dashboard() {
         };
     });
 
-    // 3. Dados Especiais para Gráfico de Barras (Quando seleciona 1 mês)
+    // 3. Dados Especiais para Gráfico de Barras
     let singleMonthData: any[] = [];
     if (isSingleMonth && slice.length > 0) {
         const item = slice[0];
@@ -145,7 +143,7 @@ export default function Dashboard() {
             processPlatform('Instagram', item.instagram, '#ec4899', 'instagram'),
         ];
 
-        // Se houver filtro de plataforma, mostramos apenas a plataforma selecionada no gráfico de barras
+        // Filtra se houver plataforma selecionada
         if (platformFilter !== 'total') {
             singleMonthData = allPlatforms.filter(p => p.id === platformFilter);
         } else {
@@ -186,7 +184,6 @@ export default function Dashboard() {
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
 
-    // Dados de conversão para visualização de mês único (Barras)
     const singleMonthConversion = [
         { name: 'Agendamento', value: conversionData[0]?.tx_agend || 0, fill: '#f59e0b' },
         { name: 'Comparecimento', value: conversionData[0]?.tx_comp || 0, fill: '#ec4899' },
@@ -270,9 +267,8 @@ export default function Dashboard() {
                                     <Tooltip 
                                         cursor={{fill: '#f8fafc'}} 
                                         contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
-                                        formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} 
+                                        formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} 
                                     />
-                                    {/* Se for total, usa as cores individuais. Se for filtro, usa a cor definida no objeto */}
                                     <Bar dataKey={mainChartMetric} radius={[8, 8, 0, 0]} barSize={platformFilter === 'total' ? 80 : 120}>
                                         {processedData.singleMonthData.map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -290,26 +286,29 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#94a3b8" tick={{fontSize: 12, fontWeight: 600}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#94a3b8" tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip 
+                                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} 
+                                        formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} 
+                                    />
                                     <Legend verticalAlign="top" height={36} iconType="circle"/>
 
-                                    {/* LÓGICA DE EXIBIÇÃO: TOTAL vs PLATAFORMA ÚNICA */}
+                                    {/* MUDANÇA: REMOVIDO stackId="1" PARA NÃO SOMAR OS VALORES */}
                                     {platformFilter === 'total' ? (
                                         <>
-                                            <Area type="monotone" name="Google Ads" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={2} fillOpacity={1} />
-                                            <Area type="monotone" name="Facebook" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={2} fillOpacity={1} />
-                                            <Area type="monotone" name="Instagram" stackId="1" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={2} fillOpacity={1} />
+                                            {/* Opacidade reduzida para ver sobreposição */}
+                                            <Area type="monotone" name="Google Ads" dataKey={mainChartMetric === 'faturamento' ? 'google_fat' : 'google_inv'} stroke="#3b82f6" fill="url(#gradGoogle)" strokeWidth={3} fillOpacity={0.4} />
+                                            <Area type="monotone" name="Facebook" dataKey={mainChartMetric === 'faturamento' ? 'face_fat' : 'face_inv'} stroke="#6366f1" fill="url(#gradFace)" strokeWidth={3} fillOpacity={0.4} />
+                                            <Area type="monotone" name="Instagram" dataKey={mainChartMetric === 'faturamento' ? 'insta_fat' : 'insta_inv'} stroke="#ec4899" fill="url(#gradInsta)" strokeWidth={3} fillOpacity={0.4} />
                                         </>
                                     ) : (
-                                        // Se escolheu uma plataforma, mostra o dado GERAL (que já foi filtrado no useMemo)
                                         <Area 
                                             type="monotone" 
                                             name={platformFilter === 'google' ? 'Google Ads' : platformFilter === 'facebook' ? 'Facebook' : 'Instagram'} 
-                                            dataKey={mainChartMetric} // Usa a métrica genérica (invest/faturamento) que já contém o valor filtrado
+                                            dataKey={mainChartMetric} 
                                             stroke={platformFilter === 'google' ? '#3b82f6' : platformFilter === 'facebook' ? '#6366f1' : '#ec4899'} 
                                             fill={`url(#grad${platformFilter === 'google' ? 'Google' : platformFilter === 'facebook' ? 'Face' : 'Insta'})`} 
                                             strokeWidth={3} 
-                                            fillOpacity={1} 
+                                            fillOpacity={0.6} 
                                         />
                                     )}
                                 </AreaChart>
@@ -335,24 +334,22 @@ export default function Dashboard() {
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // MODO BARRAS SIMPLES PARA MÊS ÚNICO
                                 <BarChart data={[processedData.totals]} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                      <XAxis tick={false} axisLine={false} />
                                      <YAxis stroke="#94a3b8" tickFormatter={(val) => `R$${val/1000}k`} tick={{fontSize: 11}} axisLine={false} tickLine={false} />
-                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} />
                                      <Bar dataKey="invest" name="Investimento" fill="#3b82f6" radius={[4,4,0,0]} barSize={80} />
                                      <Bar dataKey="faturamento" name="Faturamento" fill="#10b981" radius={[4,4,0,0]} barSize={80} />
                                      <Legend />
                                 </BarChart>
                             ) : (
-                                // MODO COMPOSTO PARA EVOLUÇÃO
                                 <ComposedChart data={processedData.chartData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis yAxisId="left" stroke="#10b981" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
                                     <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val/1000}k`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, '']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px' }} formatter={(value: any, name: any) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, name]} />
                                     <Bar yAxisId="left" dataKey="faturamento" name="Fat" fill="#10b981" radius={[4,4,0,0]} barSize={20} />
                                     <Line yAxisId="right" type="monotone" name="Invest" dataKey="invest" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
                                 </ComposedChart>
@@ -372,7 +369,6 @@ export default function Dashboard() {
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                             {processedData.isSingleMonth ? (
-                                // MODO BARRAS (COMPARATIVO PLATAFORMA)
                                 <BarChart data={processedData.singleMonthData} layout="vertical" margin={{left: 20}}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                                     <XAxis type="number" hide />
@@ -385,7 +381,6 @@ export default function Dashboard() {
                                     </Bar>
                                 </BarChart>
                             ) : (
-                                // MODO ÁREA (EVOLUÇÃO)
                                 <AreaChart data={processedData.chartData}><defs><linearGradient id="colorCpl" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" /></AreaChart>
                             )}
                         </ResponsiveContainer>
@@ -396,7 +391,6 @@ export default function Dashboard() {
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                              {processedData.isSingleMonth ? (
-                                // MODO BARRAS (COMPARATIVO ETAPAS)
                                 <BarChart data={processedData.singleMonthConversion} layout="vertical" margin={{left: 20}}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                                     <XAxis type="number" domain={[0, 100]} hide />
@@ -409,7 +403,6 @@ export default function Dashboard() {
                                     </Bar>
                                 </BarChart>
                              ) : (
-                                // MODO LINHA (EVOLUÇÃO)
                                 <LineChart data={processedData.conversionData}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Legend wrapperStyle={{fontSize: '10px'}} /><Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} /><Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} /></LineChart>
                              )}
                         </ResponsiveContainer>
