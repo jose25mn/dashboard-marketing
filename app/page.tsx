@@ -411,7 +411,6 @@ export default function Dashboard() {
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" name="Venda" dataKey="tx_venda" stroke="#10b981" strokeWidth={3} dot={{r:3}} />
                                 </LineChart>
                              )}
                         </ResponsiveContainer>
