@@ -102,9 +102,7 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- CORREÇÃO AQUI ---
-            // Voltamos ao mapeamento direto para corrigir a inversão visual.
-            // Agora 'atendimentos' (interno) pega 'metrics.atendimentos' (API).
+            // --- MANTO O MAPEAMENTO CORRIGIDO DA ÚLTIMA SOLICITAÇÃO ---
             atendimentos: metrics.atendimentos || 0, 
             agendamentos: metrics.agendamentos || 0, 
             
@@ -174,7 +172,6 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        // Com o mapeamento direto corrigido acima, 'sum.atendimentos' agora terá o valor correto (o maior)
         { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, 
         { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, 
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
@@ -253,7 +250,6 @@ export default function Dashboard() {
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* ALTERAÇÃO AQUI: Título atualizado para "Total Conversas" */}
                   <KPICard 
                     title="Total Conversas" 
                     value={processedData.totals.atendimentos.toLocaleString('pt-BR')} 
@@ -262,11 +258,11 @@ export default function Dashboard() {
                     colorTheme="orange" 
                   />
                   
-                  {/* ALTERAÇÃO AQUI: Título atualizado para "Taxa de Conversão" */}
+                  {/* ALTERAÇÃO AQUI: Cálculo da Taxa de Conversão agora é (Comparecimentos / Leads) */}
                   <KPICard 
                     title="Taxa de Conversão" 
-                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.atendimentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
-                    sub="Lead → Atendimento" 
+                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.comparecimentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
+                    sub="Lead → Comparecimento" 
                     icon={Percent} 
                     colorTheme="indigo" 
                   />
