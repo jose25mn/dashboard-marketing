@@ -176,20 +176,22 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // ADICIONADO: Valores absolutos para usar no tooltip
+        // DADOS ABSOLUTOS (usados agora no gráfico)
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
+        vendas: d.vendas || 0,
         
-        // Mantemos o calculo da taxa para o desenho da linha (eixo 0-100%)
+        // DADOS DE TAXA (mantidos caso precise futuramente)
         tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
 
+    // Alterado para usar valores absolutos também
     const singleMonthConversion = [
-        { name: 'Agendamento', value: conversionData[0]?.tx_agend || 0, fill: '#f59e0b' },
-        { name: 'Comparecimento', value: conversionData[0]?.tx_comp || 0, fill: '#ec4899' },
-        { name: 'Venda', value: conversionData[0]?.tx_venda || 0, fill: '#10b981' },
+        { name: 'Agendamento', value: conversionData[0]?.agendamentos || 0, fill: '#f59e0b' },
+        { name: 'Comparecimento', value: conversionData[0]?.comparecimentos || 0, fill: '#ec4899' },
+        { name: 'Venda', value: conversionData[0]?.vendas || 0, fill: '#10b981' },
     ];
 
     return { chartData, singleMonthData, singleMonthConversion, isSingleMonth, totals: { ...sum, roas, cpl, cpc, ticket, cpa }, funnelData, conversionData };
@@ -322,7 +324,7 @@ export default function Dashboard() {
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* NOVOS CARDS */}
+                  {/* NOVOS CARDS DE AGENDAMENTO (SOLICITADOS) */}
                   <KPICard 
                     title="Total Agendamentos" 
                     value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
@@ -372,15 +374,15 @@ export default function Dashboard() {
                       </div>
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
-                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
+                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Volume de Conversão</h3></div>
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                              {processedData.isSingleMonth ? (
                                 <BarChart data={processedData.singleMonthConversion} layout="vertical" margin={{left: 20}}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                                    <XAxis type="number" domain={[0, 100]} hide />
+                                    <XAxis type="number" hide />
                                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
-                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`${val}%`, 'Taxa']} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [val, 'Qtd']} />
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={30}>
                                         {processedData.singleMonthConversion.map((entry: any, index: number) => (
                                             <Cell key={`cell-conv-${index}`} fill={entry.fill} />
@@ -391,25 +393,53 @@ export default function Dashboard() {
                                 <LineChart data={processedData.conversionData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                    <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
                                     
-                                    {/* MUDANÇA AQUI: Tooltip customizado para ler 'agendamentos' do payload */}
+                                    {/* Eixo Y normal, sem formatação de porcentagem */}
+                                    <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                    
                                     <Tooltip 
-                                      contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} 
-                                      formatter={(value: any, name: any, item: any) => {
-                                          if (name === 'Agendamento' && item?.payload) return [item.payload.agendamentos, name];
-                                          if (name === 'Comparecimento' && item?.payload) return [item.payload.comparecimentos, name];
-                                          return [`${value}%`, name];
-                                      }} 
+                                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} 
+                                        formatter={(value: any, name: any) => [value, name]} 
                                     />
-
+                                    
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
-                                    <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
+                                    
+                                    {/* As linhas agora usam os valores absolutos 'agendamentos' e 'comparecimentos' */}
+                                    <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
                              )}
                         </ResponsiveContainer>
                       </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Eficiência de Lead (CPL)</h3></div>
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            {processedData.isSingleMonth ? (
+                                <BarChart data={processedData.singleMonthData} layout="vertical" margin={{left: 20}}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                                    <XAxis type="number" hide />
+                                    <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`R$ ${val.toFixed(2)}`, 'CPL']} />
+                                    <Bar dataKey="cpl" radius={[0, 4, 4, 0]} barSize={30}>
+                                        {processedData.singleMonthData.map((entry: any, index: number) => (
+                                            <Cell key={`cell-cpl-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            ) : (
+                                <AreaChart data={processedData.chartData}><defs><linearGradient id="colorCpl" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" /></AreaChart>
+                            )}
+                        </ResponsiveContainer>
+                      </div>
+                  </div>
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-indigo-500 rounded-full"></div> Funil Comercial</h3></div>
+                      <div className="h-[250px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={processedData.funnelData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} /><XAxis type="number" hide /><YAxis dataKey="stage" type="category" width={100} tick={{fontSize: 11, fontWeight: 700, fill: '#475569'}} axisLine={false} tickLine={false} /><Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>{processedData.funnelData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill} />))}</Bar></BarChart></ResponsiveContainer></div>
                   </div>
                 </div>
             </>
