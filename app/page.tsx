@@ -7,7 +7,8 @@ import {
 } from 'recharts';
 import { 
   Users, DollarSign, Target, Activity, TrendingUp, Eye, Lock, 
-  ArrowUpRight, PieChart, ShoppingBag, Filter, Layers, BarChart2 
+  ArrowUpRight, PieChart, ShoppingBag, Filter, Layers, BarChart2,
+  Calendar, Percent // <--- Ícones adicionados
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -75,7 +76,7 @@ export default function Dashboard() {
         chartData: [], 
         singleMonthData: [], 
         singleMonthConversion: [], 
-        totals: { invest: 0, faturamento: 0, leads: 0, roas: 0, cpl: 0, cliques: 0, cpc: 0, vendas: 0, ticket: 0, cpa: 0 }, 
+        totals: { invest: 0, faturamento: 0, leads: 0, roas: 0, cpl: 0, cliques: 0, cpc: 0, vendas: 0, ticket: 0, cpa: 0, agendamentos: 0, atendimentos: 0, comparecimentos: 0 }, 
         funnelData: [],
         conversionData: [],
         isSingleMonth: false
@@ -177,7 +178,7 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // MUDANÇA AQUI: Taxa de Agendamento calculada sobre LEADS (Agendamentos / Leads)
+        // Taxa de Agendamento calculada sobre LEADS (Agendamentos / Leads)
         tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
@@ -313,13 +314,32 @@ export default function Dashboard() {
                 </div>
 
                 {/* --- KPIS SECUNDÁRIOS --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+                {/* Atualizado para 4 colunas para acomodar os novos cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <KPICard title="Investimento" value={`R$ ${processedData.totals.invest.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Verba Mídia" icon={DollarSign} colorTheme="blue" />
                   <KPICard title="Faturamento" value={`R$ ${processedData.totals.faturamento.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Receita Total" icon={TrendingUp} colorTheme="emerald" />
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
-                  <KPICard title="Total Leads" value={processedData.totals.leads.toLocaleString()} sub="Oportunidades" icon={Users} colorTheme="indigo" />
-                  <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="orange" />
+                  
+                  {/* NOVOS CARDS ADICIONADOS AQUI */}
+                  <KPICard 
+                    title="Total Agendamentos" 
+                    value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
+                    sub="Volume Confirmado" 
+                    icon={Calendar} 
+                    colorTheme="orange" 
+                  />
+                  <KPICard 
+                    title="Taxa de Agendamento" 
+                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.agendamentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
+                    sub="Lead → Agendamento" 
+                    icon={Percent} 
+                    colorTheme="indigo" 
+                  />
+                  {/* FIM DOS NOVOS CARDS */}
+
+                  <KPICard title="Total Leads" value={processedData.totals.leads.toLocaleString()} sub="Oportunidades" icon={Users} colorTheme="blue" />
+                  <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="purple" />
                 </div>
 
                 {/* --- GRÁFICOS GERAIS --- */}
@@ -389,10 +409,7 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                                     <XAxis type="number" domain={[0, 100]} hide />
                                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
-                                    
-                                    {/* Adicionado o "%" no formatter */}
                                     <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`${val}%`, 'Taxa']} />
-                                    
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={30}>
                                         {processedData.singleMonthConversion.map((entry: any, index: number) => (
                                             <Cell key={`cell-conv-${index}`} fill={entry.fill} />
@@ -404,10 +421,7 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
-                                    
-                                    {/* Adicionado o "%" no formatter */}
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(value: any, name: any) => [`${value}%`, name]} />
-                                    
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
