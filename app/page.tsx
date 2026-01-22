@@ -176,18 +176,17 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // DADOS ABSOLUTOS (usados agora no gráfico)
+        // DADOS ABSOLUTOS
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
         vendas: d.vendas || 0,
         
-        // DADOS DE TAXA (mantidos caso precise futuramente)
+        // MANTIDO DADOS DE TAXA SE PRECISAR
         tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
     }));
 
-    // Alterado para usar valores absolutos também
     const singleMonthConversion = [
         { name: 'Agendamento', value: conversionData[0]?.agendamentos || 0, fill: '#f59e0b' },
         { name: 'Comparecimento', value: conversionData[0]?.comparecimentos || 0, fill: '#ec4899' },
@@ -324,7 +323,7 @@ export default function Dashboard() {
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* NOVOS CARDS DE AGENDAMENTO (SOLICITADOS) */}
+                  {/* CARDS DE AGENDAMENTO */}
                   <KPICard 
                     title="Total Agendamentos" 
                     value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
@@ -375,7 +374,8 @@ export default function Dashboard() {
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Volume de Conversão</h3></div>
-                      <div className="h-[250px]">
+                      {/* Altura ajustada para 300px para preencher melhor o espaço */}
+                      <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                              {processedData.isSingleMonth ? (
                                 <BarChart data={processedData.singleMonthConversion} layout="vertical" margin={{left: 20}}>
@@ -392,9 +392,16 @@ export default function Dashboard() {
                              ) : (
                                 <LineChart data={processedData.conversionData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                    <XAxis 
+                                        dataKey="name" 
+                                        stroke="#64748b" 
+                                        tick={{fontSize: 10}} 
+                                        axisLine={false} 
+                                        tickLine={false} 
+                                        interval={0} // FORÇA A EXIBIÇÃO DE TODOS OS RÓTULOS (INCLUINDO NOV)
+                                        padding={{ left: 30, right: 30 }} // PREENCHE AS LATERAIS (MENOS ESPAÇO VAZIO)
+                                    />
                                     
-                                    {/* Eixo Y normal, sem formatação de porcentagem */}
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     
                                     <Tooltip 
@@ -404,7 +411,6 @@ export default function Dashboard() {
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     
-                                    {/* As linhas agora usam os valores absolutos 'agendamentos' e 'comparecimentos' */}
                                     <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
