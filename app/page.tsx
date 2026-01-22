@@ -243,7 +243,34 @@ export default function Dashboard() {
             </div>
         ) : (
             <>  
-                {/* --- GRÁFICO PRINCIPAL --- */}
+                {/* --- KPIS (MOVIDO PARA O TOPO) --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <KPICard title="Investimento" value={`R$ ${processedData.totals.invest.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Verba Mídia" icon={DollarSign} colorTheme="blue" />
+                  <KPICard title="Faturamento" value={`R$ ${processedData.totals.faturamento.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Receita Total" icon={TrendingUp} colorTheme="emerald" />
+                  <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
+                  <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
+                  
+                  {/* CARDS DE AGENDAMENTO */}
+                  <KPICard 
+                    title="Total Agendamentos" 
+                    value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
+                    sub="Volume Confirmado" 
+                    icon={Calendar} 
+                    colorTheme="orange" 
+                  />
+                  <KPICard 
+                    title="Taxa de Agendamento" 
+                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.agendamentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
+                    sub="Lead → Agendamento" 
+                    icon={Percent} 
+                    colorTheme="indigo" 
+                  />
+                  
+                  <KPICard title="Total Leads" value={processedData.totals.leads.toLocaleString()} sub="Oportunidades" icon={Users} colorTheme="blue" />
+                  <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="purple" />
+                </div>
+
+                {/* --- GRÁFICO PRINCIPAL (AGORA EMBAIXO) --- */}
                 <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-200 mb-8 transition-all hover:shadow-lg">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <div>
@@ -314,33 +341,6 @@ export default function Dashboard() {
                             )}
                         </ResponsiveContainer>
                     </div>
-                </div>
-
-                {/* --- KPIS SECUNDÁRIOS --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <KPICard title="Investimento" value={`R$ ${processedData.totals.invest.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Verba Mídia" icon={DollarSign} colorTheme="blue" />
-                  <KPICard title="Faturamento" value={`R$ ${processedData.totals.faturamento.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Receita Total" icon={TrendingUp} colorTheme="emerald" />
-                  <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
-                  <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
-                  
-                  {/* CARDS DE AGENDAMENTO */}
-                  <KPICard 
-                    title="Total Agendamentos" 
-                    value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
-                    sub="Volume Confirmado" 
-                    icon={Calendar} 
-                    colorTheme="orange" 
-                  />
-                  <KPICard 
-                    title="Taxa de Agendamento" 
-                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.agendamentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
-                    sub="Lead → Agendamento" 
-                    icon={Percent} 
-                    colorTheme="indigo" 
-                  />
-                  
-                  <KPICard title="Total Leads" value={processedData.totals.leads.toLocaleString()} sub="Oportunidades" icon={Users} colorTheme="blue" />
-                  <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="purple" />
                 </div>
 
                 {/* --- GRÁFICOS GERAIS --- */}
