@@ -8,7 +8,7 @@ import {
 import { 
   Users, DollarSign, Target, Activity, TrendingUp, Eye, Lock, 
   ArrowUpRight, PieChart, ShoppingBag, Filter, Layers, BarChart2,
-  Calendar, Percent // <--- Ícones adicionados
+  Calendar, Percent 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -56,7 +56,6 @@ export default function Dashboard() {
   const [monthFilter, setMonthFilter] = useState('all'); 
   const [platformFilter, setPlatformFilter] = useState<'total' | 'google' | 'facebook' | 'instagram'>('total');
 
-  // Controle do Gráfico Principal
   const [mainChartMetric, setMainChartMetric] = useState<'faturamento' | 'invest'>('faturamento');
 
   useEffect(() => {
@@ -109,7 +108,6 @@ export default function Dashboard() {
             ticket: metrics.ticket || 0,
             cpa: (metrics.vendas || 0) > 0 ? (metrics.invest || 0) / metrics.vendas : 0,
             
-            // Dados detalhados para o gráfico de área (Total)
             google_fat: item.google?.faturamento || 0,
             google_inv: item.google?.invest || 0,
             face_fat: item.facebook?.faturamento || 0,
@@ -178,7 +176,11 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // Taxa de Agendamento calculada sobre LEADS (Agendamentos / Leads)
+        // ADICIONADO: Valores absolutos para usar no tooltip
+        agendamentos: d.agendamentos || 0,
+        comparecimentos: d.comparecimentos || 0,
+        
+        // Mantemos o calculo da taxa para o desenho da linha (eixo 0-100%)
         tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
         tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
         tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
@@ -314,14 +316,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* --- KPIS SECUNDÁRIOS --- */}
-                {/* Atualizado para 4 colunas para acomodar os novos cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <KPICard title="Investimento" value={`R$ ${processedData.totals.invest.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Verba Mídia" icon={DollarSign} colorTheme="blue" />
                   <KPICard title="Faturamento" value={`R$ ${processedData.totals.faturamento.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Receita Total" icon={TrendingUp} colorTheme="emerald" />
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* NOVOS CARDS ADICIONADOS AQUI */}
+                  {/* NOVOS CARDS */}
                   <KPICard 
                     title="Total Agendamentos" 
                     value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
@@ -336,8 +337,7 @@ export default function Dashboard() {
                     icon={Percent} 
                     colorTheme="indigo" 
                   />
-                  {/* FIM DOS NOVOS CARDS */}
-
+                  
                   <KPICard title="Total Leads" value={processedData.totals.leads.toLocaleString()} sub="Oportunidades" icon={Users} colorTheme="blue" />
                   <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="purple" />
                 </div>
@@ -372,35 +372,6 @@ export default function Dashboard() {
                       </div>
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
-                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-indigo-500 rounded-full"></div> Funil Comercial</h3></div>
-                      <div className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={processedData.funnelData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} /><XAxis type="number" hide /><YAxis dataKey="stage" type="category" width={100} tick={{fontSize: 11, fontWeight: 700, fill: '#475569'}} axisLine={false} tickLine={false} /><Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={24}>{processedData.funnelData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.fill} />))}</Bar></BarChart></ResponsiveContainer></div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
-                      <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Eficiência de Lead (CPL)</h3></div>
-                      <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            {processedData.isSingleMonth ? (
-                                <BarChart data={processedData.singleMonthData} layout="vertical" margin={{left: 20}}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                                    <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 11, fontWeight: 700}} axisLine={false} tickLine={false} />
-                                    <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(val:any) => [`R$ ${val.toFixed(2)}`, 'CPL']} />
-                                    <Bar dataKey="cpl" radius={[0, 4, 4, 0]} barSize={30}>
-                                        {processedData.singleMonthData.map((entry: any, index: number) => (
-                                            <Cell key={`cell-cpl-${index}`} fill={entry.fill} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            ) : (
-                                <AreaChart data={processedData.chartData}><defs><linearGradient id="colorCpl" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} /><YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `R$${val}`} /><Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} /><Area type="monotone" name="CPL (R$)" dataKey="cpl" stroke="#3b82f6" strokeWidth={3} fill="url(#colorCpl)" /></AreaChart>
-                            )}
-                        </ResponsiveContainer>
-                      </div>
-                  </div>
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Taxas de Conversão (%)</h3></div>
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -421,7 +392,17 @@ export default function Dashboard() {
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                     <XAxis dataKey="name" stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} formatter={(value: any, name: any) => [`${value}%`, name]} />
+                                    
+                                    {/* MUDANÇA AQUI: Tooltip customizado para ler 'agendamentos' do payload */}
+                                    <Tooltip 
+                                      contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px' }} 
+                                      formatter={(value: any, name: any, item: any) => {
+                                          if (name === 'Agendamento' && item?.payload) return [item.payload.agendamentos, name];
+                                          if (name === 'Comparecimento' && item?.payload) return [item.payload.comparecimentos, name];
+                                          return [`${value}%`, name];
+                                      }} 
+                                    />
+
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     <Line type="monotone" name="Agendamento" dataKey="tx_agend" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="tx_comp" stroke="#ec4899" strokeWidth={2} dot={false} />
