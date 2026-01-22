@@ -102,11 +102,11 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- AJUSTE DE VALORES (TROCA SOLICITADA) ---
-            // Agora: Atendimentos recebe os dados de .atendimentos
-            //        Agendamentos recebe os dados de .agendamentos
-            atendimentos: metrics.atendimentos || 0, 
-            agendamentos: metrics.agendamentos || 0, 
+            // --- CORREÇÃO: TROCA DE VALORES ---
+            // 'atendimentos' (variável interna) recebe o valor da API 'agendamentos' (que é o maior volume)
+            // 'agendamentos' (variável interna) recebe o valor da API 'atendimentos' (que é o menor volume)
+            atendimentos: metrics.agendamentos || 0, 
+            agendamentos: metrics.atendimentos || 0, 
             
             comparecimentos: metrics.comparecimentos || 0,
             cpl: metrics.cpl || 0,
@@ -182,7 +182,7 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // DADOS PARA O GRÁFICO DE CONVERSÃO
+        // DADOS JÁ TROCADOS NO PASSO 2, AQUI SÓ REPASSA
         atendimentos: d.atendimentos || 0,
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
