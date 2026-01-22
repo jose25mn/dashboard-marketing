@@ -102,7 +102,7 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- MANTO O MAPEAMENTO CORRIGIDO DA ÚLTIMA SOLICITAÇÃO ---
+            // --- MAPEAMENTO CORRIGIDO ---
             atendimentos: metrics.atendimentos || 0, 
             agendamentos: metrics.agendamentos || 0, 
             
@@ -172,7 +172,8 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, 
+        // ALTERAÇÃO AQUI: Nome mudado para "Conversas"
+        { stage: 'Conversas', value: sum.atendimentos || 0, fill: '#f97316' }, 
         { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, 
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
@@ -188,7 +189,8 @@ export default function Dashboard() {
     }));
 
     const singleMonthConversion = [
-        { name: 'Atendimento', value: conversionData[0]?.atendimentos || 0, fill: '#f59e0b' },
+        // ALTERAÇÃO AQUI: Nome mudado para "Conversas" para o gráfico de mês único
+        { name: 'Conversas', value: conversionData[0]?.atendimentos || 0, fill: '#f59e0b' },
         { name: 'Agendamento', value: conversionData[0]?.agendamentos || 0, fill: '#3b82f6' },
         { name: 'Comparecimento', value: conversionData[0]?.comparecimentos || 0, fill: '#ec4899' },
     ];
@@ -258,7 +260,7 @@ export default function Dashboard() {
                     colorTheme="orange" 
                   />
                   
-                  {/* ALTERAÇÃO AQUI: Cálculo da Taxa de Conversão agora é (Comparecimentos / Leads) */}
+                  {/* CÁLCULO MANTIDO: (Comparecimentos / Leads) */}
                   <KPICard 
                     title="Taxa de Conversão" 
                     value={`${(processedData.totals.leads > 0 ? (processedData.totals.comparecimentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
@@ -411,7 +413,8 @@ export default function Dashboard() {
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     
-                                    <Line type="monotone" name="Atendimento" dataKey="atendimentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    {/* ALTERAÇÃO AQUI: Nome na legenda mudado para "Conversas" */}
+                                    <Line type="monotone" name="Conversas" dataKey="atendimentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#3b82f6" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
