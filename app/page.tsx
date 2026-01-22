@@ -8,7 +8,7 @@ import {
 import { 
   Users, DollarSign, Target, Activity, TrendingUp, Eye, Lock, 
   ArrowUpRight, PieChart, ShoppingBag, Filter, Layers, BarChart2,
-  Calendar, Percent 
+  Calendar, Percent, MessageCircle 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -168,8 +168,10 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#f97316' },
-        { stage: 'Atendimentos', value: sum.atendimentos || 0, fill: '#f59e0b' },
+        // ALTERAÇÃO AQUI: De Agendamentos para Atendimentos (Conversas sem vácuo)
+        { stage: 'Atendimentos (Conversas sem vácuo)', value: sum.agendamentos || 0, fill: '#f97316' },
+        // ALTERAÇÃO AQUI: De Atendimentos para Agendamentos
+        { stage: 'Agendamentos', value: sum.atendimentos || 0, fill: '#f59e0b' },
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
@@ -188,7 +190,8 @@ export default function Dashboard() {
     }));
 
     const singleMonthConversion = [
-        { name: 'Agendamento', value: conversionData[0]?.agendamentos || 0, fill: '#f59e0b' },
+        // ALTERAÇÃO AQUI: Label do gráfico mudado de Agendamento para Atendimento
+        { name: 'Atendimento', value: conversionData[0]?.agendamentos || 0, fill: '#f59e0b' },
         { name: 'Comparecimento', value: conversionData[0]?.comparecimentos || 0, fill: '#ec4899' },
         { name: 'Venda', value: conversionData[0]?.vendas || 0, fill: '#10b981' },
     ];
@@ -250,18 +253,19 @@ export default function Dashboard() {
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* CARDS DE AGENDAMENTO */}
+                  {/* ALTERAÇÃO: Título mudado de "Total Agendamentos" para "Total Atendimentos" */}
                   <KPICard 
-                    title="Total Agendamentos" 
+                    title="Total Atendimentos" 
                     value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
-                    sub="Volume Confirmado" 
-                    icon={Calendar} 
+                    sub="Conversas Iniciadas" 
+                    icon={MessageCircle} 
                     colorTheme="orange" 
                   />
+                  {/* ALTERAÇÃO: Título mudado de "Taxa de Agendamento" para "Taxa de Atendimento" */}
                   <KPICard 
-                    title="Taxa de Agendamento" 
+                    title="Taxa de Atendimento" 
                     value={`${(processedData.totals.leads > 0 ? (processedData.totals.agendamentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
-                    sub="Lead → Agendamento" 
+                    sub="Lead → Atendimento" 
                     icon={Percent} 
                     colorTheme="indigo" 
                   />
@@ -411,7 +415,8 @@ export default function Dashboard() {
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     
-                                    <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    {/* ALTERAÇÃO AQUI: Nome da linha mudado de Agendamento para Atendimento */}
+                                    <Line type="monotone" name="Atendimento" dataKey="agendamentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
                                     <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
                              )}
