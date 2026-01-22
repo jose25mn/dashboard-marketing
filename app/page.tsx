@@ -253,15 +253,18 @@ export default function Dashboard() {
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
+                  {/* ALTERAÇÃO AQUI: Título atualizado para "Total Conversas" */}
                   <KPICard 
-                    title="Total Atendimentos" 
+                    title="Total Conversas" 
                     value={processedData.totals.atendimentos.toLocaleString('pt-BR')} 
                     sub="Conversas Iniciadas" 
                     icon={MessageCircle} 
                     colorTheme="orange" 
                   />
+                  
+                  {/* ALTERAÇÃO AQUI: Título atualizado para "Taxa de Conversão" */}
                   <KPICard 
-                    title="Taxa de Atendimento" 
+                    title="Taxa de Conversão" 
                     value={`${(processedData.totals.leads > 0 ? (processedData.totals.atendimentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
                     sub="Lead → Atendimento" 
                     icon={Percent} 
