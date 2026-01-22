@@ -93,9 +93,6 @@ export default function Dashboard() {
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
         
-        // APLICAÇÃO DA TROCA DE NOMES SOLICITADA ANTERIORMENTE:
-        // O que vem na API como 'agendamentos' vira 'atendimentos' (volume maior/conversas)
-        // O que vem na API como 'atendimentos' vira 'agendamentos' (volume menor/agendado)
         return { 
             name: item.name, 
             ...metrics,
@@ -105,9 +102,11 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // SWAP DE VARIÁVEIS AQUI
-            atendimentos: metrics.agendamentos || 0, 
-            agendamentos: metrics.atendimentos || 0, 
+            // --- AJUSTE DE VALORES (TROCA SOLICITADA) ---
+            // Agora: Atendimentos recebe os dados de .atendimentos
+            //        Agendamentos recebe os dados de .agendamentos
+            atendimentos: metrics.atendimentos || 0, 
+            agendamentos: metrics.agendamentos || 0, 
             
             comparecimentos: metrics.comparecimentos || 0,
             cpl: metrics.cpl || 0,
@@ -175,8 +174,8 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, // Ajustei a cor para Laranja
-        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, // Ajustei a cor para Azul
+        { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, 
+        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, 
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
@@ -184,7 +183,6 @@ export default function Dashboard() {
     const conversionData = chartData.map(d => ({
         name: d.name,
         // DADOS PARA O GRÁFICO DE CONVERSÃO
-        // Certificando que as 3 métricas estão disponíveis
         atendimentos: d.atendimentos || 0,
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
@@ -413,13 +411,8 @@ export default function Dashboard() {
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     
-                                    {/* 1. ATENDIMENTO (LARANJA) - Volume Maior (Conversas) */}
                                     <Line type="monotone" name="Atendimento" dataKey="atendimentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                                    
-                                    {/* 2. AGENDAMENTO (AZUL) - Nova Linha Adicionada */}
                                     <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                                    
-                                    {/* 3. COMPARECIMENTO (ROSA) */}
                                     <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
                              )}
