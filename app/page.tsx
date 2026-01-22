@@ -102,11 +102,11 @@ export default function Dashboard() {
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
             
-            // --- CORREÇÃO: TROCA DE VALORES ---
-            // 'atendimentos' (variável interna) recebe o valor da API 'agendamentos' (que é o maior volume)
-            // 'agendamentos' (variável interna) recebe o valor da API 'atendimentos' (que é o menor volume)
-            atendimentos: metrics.agendamentos || 0, 
-            agendamentos: metrics.atendimentos || 0, 
+            // --- CORREÇÃO AQUI ---
+            // Voltamos ao mapeamento direto para corrigir a inversão visual.
+            // Agora 'atendimentos' (interno) pega 'metrics.atendimentos' (API).
+            atendimentos: metrics.atendimentos || 0, 
+            agendamentos: metrics.agendamentos || 0, 
             
             comparecimentos: metrics.comparecimentos || 0,
             cpl: metrics.cpl || 0,
@@ -174,6 +174,7 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
+        // Com o mapeamento direto corrigido acima, 'sum.atendimentos' agora terá o valor correto (o maior)
         { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, 
         { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, 
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
@@ -182,7 +183,7 @@ export default function Dashboard() {
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // DADOS JÁ TROCADOS NO PASSO 2, AQUI SÓ REPASSA
+        // DADOS
         atendimentos: d.atendimentos || 0,
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
