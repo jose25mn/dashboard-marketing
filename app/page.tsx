@@ -92,6 +92,10 @@ export default function Dashboard() {
     // 2. Mapeamento
     const chartData = slice.map(item => {
         const metrics = platformFilter === 'total' ? (item.total || {}) : (item[platformFilter] || {});
+        
+        // APLICAÇÃO DA TROCA DE NOMES SOLICITADA ANTERIORMENTE:
+        // O que vem na API como 'agendamentos' vira 'atendimentos' (volume maior/conversas)
+        // O que vem na API como 'atendimentos' vira 'agendamentos' (volume menor/agendado)
         return { 
             name: item.name, 
             ...metrics,
@@ -100,8 +104,11 @@ export default function Dashboard() {
             leads: metrics.leads || 0,
             cliques: metrics.cliques || 0,
             vendas: metrics.vendas || 0,
+            
+            // SWAP DE VARIÁVEIS AQUI
             atendimentos: metrics.agendamentos || 0, 
             agendamentos: metrics.atendimentos || 0, 
+            
             comparecimentos: metrics.comparecimentos || 0,
             cpl: metrics.cpl || 0,
             cpc: metrics.cpc || 0,
@@ -168,32 +175,26 @@ export default function Dashboard() {
 
     const funnelData = [
         { stage: 'Leads', value: sum.leads || 0, fill: '#6366f1' }, 
-        // ALTERAÇÃO AQUI: De Agendamentos para Atendimentos (Conversas sem vácuo)
-        { stage: 'Atendimentos (Conversas sem vácuo)', value: sum.agendamentos || 0, fill: '#f97316' },
-        // ALTERAÇÃO AQUI: De Atendimentos para Agendamentos
-        { stage: 'Agendamentos', value: sum.atendimentos || 0, fill: '#f59e0b' },
+        { stage: 'Atendimentos (Conversas)', value: sum.atendimentos || 0, fill: '#f97316' }, // Ajustei a cor para Laranja
+        { stage: 'Agendamentos', value: sum.agendamentos || 0, fill: '#3b82f6' }, // Ajustei a cor para Azul
         { stage: 'Comparecimentos', value: sum.comparecimentos || 0, fill: '#ec4899' }, 
         { stage: 'Vendas', value: sum.vendas || 0, fill: '#10b981' }, 
     ];
 
     const conversionData = chartData.map(d => ({
         name: d.name,
-        // DADOS ABSOLUTOS
+        // DADOS PARA O GRÁFICO DE CONVERSÃO
+        // Certificando que as 3 métricas estão disponíveis
+        atendimentos: d.atendimentos || 0,
         agendamentos: d.agendamentos || 0,
         comparecimentos: d.comparecimentos || 0,
-        vendas: d.vendas || 0,
-        
-        // MANTIDO DADOS DE TAXA SE PRECISAR
-        tx_agend: d.leads > 0 ? Number(((d.agendamentos / d.leads) * 100).toFixed(1)) : 0,
-        tx_comp: d.agendamentos > 0 ? Number(((d.comparecimentos / d.agendamentos) * 100).toFixed(1)) : 0,
-        tx_venda: d.comparecimentos > 0 ? Number(((d.vendas / d.comparecimentos) * 100).toFixed(1)) : 0
+        vendas: d.vendas || 0
     }));
 
     const singleMonthConversion = [
-        // ALTERAÇÃO AQUI: Label do gráfico mudado de Agendamento para Atendimento
-        { name: 'Atendimento', value: conversionData[0]?.agendamentos || 0, fill: '#f59e0b' },
+        { name: 'Atendimento', value: conversionData[0]?.atendimentos || 0, fill: '#f59e0b' },
+        { name: 'Agendamento', value: conversionData[0]?.agendamentos || 0, fill: '#3b82f6' },
         { name: 'Comparecimento', value: conversionData[0]?.comparecimentos || 0, fill: '#ec4899' },
-        { name: 'Venda', value: conversionData[0]?.vendas || 0, fill: '#10b981' },
     ];
 
     return { chartData, singleMonthData, singleMonthConversion, isSingleMonth, totals: { ...sum, roas, cpl, cpc, ticket, cpa }, funnelData, conversionData };
@@ -246,25 +247,23 @@ export default function Dashboard() {
             </div>
         ) : (
             <>  
-                {/* --- KPIS (MOVIDO PARA O TOPO) --- */}
+                {/* --- KPIS --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   <KPICard title="Investimento" value={`R$ ${processedData.totals.invest.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Verba Mídia" icon={DollarSign} colorTheme="blue" />
                   <KPICard title="Faturamento" value={`R$ ${processedData.totals.faturamento.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Receita Total" icon={TrendingUp} colorTheme="emerald" />
                   <KPICard title="ROAS" value={`${processedData.totals.roas.toFixed(2)}x`} sub="Retorno Mídia" icon={Target} colorTheme="cyan" />
                   <KPICard title="Ticket Médio" value={`R$ ${processedData.totals.ticket.toLocaleString('pt-BR', {maximumFractionDigits: 0})}`} sub="Por Venda" icon={ShoppingBag} colorTheme="purple" />
                   
-                  {/* ALTERAÇÃO: Título mudado de "Total Agendamentos" para "Total Atendimentos" */}
                   <KPICard 
                     title="Total Atendimentos" 
-                    value={processedData.totals.agendamentos.toLocaleString('pt-BR')} 
+                    value={processedData.totals.atendimentos.toLocaleString('pt-BR')} 
                     sub="Conversas Iniciadas" 
                     icon={MessageCircle} 
                     colorTheme="orange" 
                   />
-                  {/* ALTERAÇÃO: Título mudado de "Taxa de Agendamento" para "Taxa de Atendimento" */}
                   <KPICard 
                     title="Taxa de Atendimento" 
-                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.agendamentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
+                    value={`${(processedData.totals.leads > 0 ? (processedData.totals.atendimentos / processedData.totals.leads * 100) : 0).toFixed(1)}%`} 
                     sub="Lead → Atendimento" 
                     icon={Percent} 
                     colorTheme="indigo" 
@@ -274,7 +273,7 @@ export default function Dashboard() {
                   <KPICard title="CPA (Venda)" value={`R$ ${processedData.totals.cpa.toFixed(0)}`} sub="Custo/Venda" icon={PieChart} colorTheme="purple" />
                 </div>
 
-                {/* --- GRÁFICO PRINCIPAL (AGORA EMBAIXO) --- */}
+                {/* --- GRÁFICO PRINCIPAL --- */}
                 <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-200 mb-8 transition-all hover:shadow-lg">
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <div>
@@ -378,7 +377,6 @@ export default function Dashboard() {
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
                       <div className="flex justify-between items-center mb-6"><h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Volume de Conversão</h3></div>
-                      {/* Altura ajustada para 300px para preencher melhor o espaço */}
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                              {processedData.isSingleMonth ? (
@@ -402,8 +400,8 @@ export default function Dashboard() {
                                         tick={{fontSize: 10}} 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        interval={0} // FORÇA A EXIBIÇÃO DE TODOS OS RÓTULOS (INCLUINDO NOV)
-                                        padding={{ left: 30, right: 30 }} // PREENCHE AS LATERAIS (MENOS ESPAÇO VAZIO)
+                                        interval={0} 
+                                        padding={{ left: 30, right: 30 }} 
                                     />
                                     
                                     <YAxis stroke="#64748b" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
@@ -415,8 +413,13 @@ export default function Dashboard() {
                                     
                                     <Legend wrapperStyle={{fontSize: '10px'}} />
                                     
-                                    {/* ALTERAÇÃO AQUI: Nome da linha mudado de Agendamento para Atendimento */}
-                                    <Line type="monotone" name="Atendimento" dataKey="agendamentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    {/* 1. ATENDIMENTO (LARANJA) - Volume Maior (Conversas) */}
+                                    <Line type="monotone" name="Atendimento" dataKey="atendimentos" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                                    
+                                    {/* 2. AGENDAMENTO (AZUL) - Nova Linha Adicionada */}
+                                    <Line type="monotone" name="Agendamento" dataKey="agendamentos" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                                    
+                                    {/* 3. COMPARECIMENTO (ROSA) */}
                                     <Line type="monotone" name="Comparecimento" dataKey="comparecimentos" stroke="#ec4899" strokeWidth={2} dot={false} />
                                 </LineChart>
                              )}
